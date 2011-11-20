@@ -1,0 +1,176 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+      body { margin: 0px; padding: 30px; font-family:"Lucida Console", sans-serif; }
+      /*#myCanvas { border: 1px solid #9C9898; }*/
+    </style>
+    <script>
+
+      squareSide = 45; // side of square in pixels
+      unit = 3; // number of squares in a unit
+      gridSize = {'w':squareSide*10, 'h':squareSide*10}; // size of grid in pixels
+
+      // Points : Start, control point 1, control point 2 and End
+      pts = [{'x':convX(0.0), 'y':convY(0.0)}, {'x':convX(1.3), 'y':convY(-0.05)}, {'x':convX(0.92), 'y':convY(0.2)}, {'x':convX(1.0), 'y':convY(1.0)}];
+
+      radius = 2;
+      ptIdx = -1;
+
+      // Helpers : Convert to canvas coordinates
+      function convX(x) { return x*squareSide*unit + gridSize.w/2; }
+
+      function convY(y) { return -y*squareSide*unit + gridSize.h/2; }
+      
+      //function visX(x) { return x*
+
+      // Helper : Draws a grid within the given rectangle
+      function drawGrid(context, squareSide, gridFrame, bordered) {
+        //Draw vertical lines
+        for (var i = squareSide; i < gridFrame.w; i += squareSide) {
+          context.moveTo(gridFrame.x + i, gridFrame.y);
+          context.lineTo(gridFrame.x + i, gridFrame.y + gridFrame.h);
+          context.stroke();
+        }
+        if (bordered==true) {
+          context.moveTo(gridFrame.x, gridFrame.y);
+          context.lineTo(gridFrame.x + gridFrame.w, gridFrame.y);
+          context.stroke();
+          context.moveTo(gridFrame.x + gridFrame.w, gridFrame.y);
+          context.lineTo(gridFrame.x + gridFrame.w, gridFrame.y + gridFrame.h);
+          context.stroke();
+        }
+   			// Draw horizontal lines
+ 	  		for (var j = squareSide; j < gridFrame.h; j += squareSide) {
+          context.moveTo(gridFrame.x, gridFrame.y + j);
+          context.lineTo(gridFrame.x + gridFrame.w, gridFrame.y + j);
+          context.stroke();
+   			}
+   			if (bordered==true) {
+          context.moveTo(gridFrame.x, gridFrame.y);
+          context.lineTo(gridFrame.x, gridFrame.y + gridFrame.h);
+          context.stroke();      
+          context.moveTo(gridFrame.x, gridFrame.y + gridFrame.h);
+          context.lineTo(gridFrame.x + gridFrame.w, gridFrame.y + gridFrame.h);
+          context.stroke();
+        }
+     	}
+     	
+     	// Helper : Draws the control points and joint lines
+     	function drawControlPoints(context) {
+
+				context.save();
+       	context.beginPath();
+     	  context.strokeStyle = "blue";
+       	context.arc(pts[0].x, pts[0].y, radius, 0, 2 * Math.PI, false);
+       	context.stroke();
+       	context.arc(pts[1].x, pts[1].y, radius, 0, 2 * Math.PI, false);
+     	  context.stroke();
+       	context.arc(pts[2].x, pts[2].y, radius, 0, 2 * Math.PI, false);
+       	context.stroke();
+       	context.arc(pts[3].x, pts[3].y, radius, 0, 2 * Math.PI, false);
+       	context.stroke();
+       	context.restore();
+     	}
+
+      // Draws the whole canvas
+      function drawCanvas() {
+        var canvas = document.getElementById("theCanvas");
+        var context = canvas.getContext("2d");
+        
+        var gridFrame = {'x':0, 'y':0, 'w':gridSize.w, 'h':gridSize.h};
+        context.clearRect(gridFrame.x, gridFrame.y, gridFrame.w, gridFrame.h);
+
+        // Grid
+      	context.save();
+      	context.lineWidth = 1.0;
+      
+        // Draw dense grid
+      	context.strokeStyle = "EEEEEE";
+      	context.beginPath();
+      	drawGrid(context, squareSide, gridFrame, true);
+      	context.closePath();
+      
+        // Draw non-dense grid
+      	context.strokeStyle = "AAAAAA";
+      	context.beginPath();
+      	var gX = (gridSize.w/2) - Math.ceil((gridSize.w/2)/(squareSide*unit))*(squareSide*unit);
+      	var gY = (gridSize.h/2) - Math.ceil((gridSize.h/2)/(squareSide*unit))*(squareSide*unit);
+      	var gW = gridSize.w + 2*(-gX);
+      	var gH = gridSize.h + 2*(-gY);
+      	drawGrid(context, squareSide*unit, {'x':gX, 'y':gY, 'w':gW, 'h':gH}, false);
+      	context.closePath();
+      
+      	context.restore();
+      
+      	// Draw control points
+      	drawControlPoints(context);
+      
+      	// Draw bezier
+      	context.beginPath();
+      	context.moveTo(pts[0].x, pts[0].y);
+      	context.bezierCurveTo(pts[1].x, pts[1].y, pts[2].x, pts[2].y, pts[3].x, pts[3].y);
+      	context.lineWidth = 2;
+      	context.strokeStyle = "red";
+      	context.stroke();
+      	context.closePath();
+      }
+      
+      // Update coordinates from view
+      function updateFields() {
+      
+      }
+
+      // Event handlers:
+      function dragOn(event){
+
+        // Clicked position
+        var canvas = document.getElementById("theCanvas");
+        var clickPos = {'x':event.offsetX?(event.offsetX):event.pageX - canvas.offsetLeft, 'y':event.offsetY?(event.offsetY):event.pageY - canvas.offsetTop};
+
+        // Calculate the clicked point
+        for (var i = 0; i < pts.length; i++) {
+          var dist = Math.sqrt(Math.pow((pts[i].x - clickPos.x), 2) + Math.pow((pts[i].y - clickPos.y), 2));
+          if (dist <= radius*2) {
+            ptIdx = i;
+            return;
+          }
+        }
+        ptIdx = -1;
+      }
+      
+      function dragOff(event) {
+        ptIdx = -1;
+      }
+      
+      function dragPt(event) {
+        if (ptIdx < 0) return;
+       
+        // Update points and re-draw the canvas
+        pts[ptIdx] = {
+        'x':event.offsetX?(event.offsetX):event.pageX - canvas.offsetLeft, 
+        'y':event.offsetY?(event.offsetY):event.pageY - canvas.offsetTop};;
+        drawCanvas();
+      }
+      
+      window.onload = function() {
+        var canvas = document.getElementById("theCanvas");
+        canvas.setAttribute("width", gridSize.w);
+        canvas.setAttribute("height", gridSize.h);
+
+        // Draw the canvas with the initial points
+        drawCanvas(canvas);
+      };
+    </script>
+  </head>
+  <body onmousedown="return false;">
+    <canvas id="theCanvas" onMousedown="dragOn(event)" onmousemove="dragPt(event)" onmouseup="dragOff(event)">
+    </canvas>
+    <form name="theForm" method="post">
+    Start Point     ( <input type="text" name="pt0x" size="4" />, <input type="text" name="pt0y" size="4" /> ); </br>
+    Control Point 1 ( <input type="text" name="pt1x" size="4" />, <input type="text" name="pt1y" size="4" /> ); </br>
+    Control Point 2 ( <input type="text" name="pt2x" size="4" />, <input type="text" name="pt2y" size="4" /> ); </br>
+    End Point       ( <input type="text" name="pt3x" size="4" />, <input type="text" name="pt3y" size="4" /> ); </br>
+    </form> 
+  </body>
+</html>
