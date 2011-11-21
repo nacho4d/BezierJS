@@ -3,6 +3,7 @@
   <head>
     <style>
       body { margin: 0px; padding: 30px; font-family:"Lucida Console", sans-serif; }
+      form [disabled] { border:none; }
       /*#myCanvas { border: 1px solid #9C9898; }*/
     </style>
     <script>
@@ -16,6 +17,8 @@
 
       radius = 2;
       ptIdx = -1;
+
+      timingFunction = true;
 
       // Helpers : Conversion functions
       // x_ and y_ are in visible coordinates aprox. (-1,-1).
@@ -120,7 +123,11 @@
       
       // Update coordinates from view
       function updateFields() {
-      
+        var form = document.theForm;
+        form.pt0x.value = visX(pts[0].x); form.pt0y.value = visY(pts[0].y);
+        form.pt1x.value = visX(pts[1].x); form.pt1y.value = visY(pts[1].y);
+        form.pt2x.value = visX(pts[2].x); form.pt2y.value = visY(pts[2].y);
+        form.pt3x.value = visX(pts[3].x); form.pt3y.value = visY(pts[3].y);
       }
 
       // Event handlers:
@@ -143,6 +150,13 @@
       
       function dragOff(event) {
         ptIdx = -1;
+        // If is in timing function mode, change back the start and end points if needed
+        if (timingFunction && (visX(pts[0].x)!=0 || visY(pts[0].y)!=0 || visX(pts[3].x)!=1 || visY(pts[3].y) !=1 )) {
+            pts[0] = {'x':convX(0), 'y':convY(0) };
+            pts[3] = {'x':convX(1), 'y':convY(1) };
+            drawCanvas();
+            updateFields();
+        }
       }
       
       function dragPt(event) {
@@ -154,34 +168,108 @@
         'y':event.offsetY?(event.offsetY):event.pageY - canvas.offsetTop};;
         drawCanvas();
         updateFields();
+        if (timingFunction && ptIdx != 0 && ptIds != 3) {
+          updateObjc();
+        }
       }
       
-      function updateFields() {
-        var form = document.theForm;
-        form.pt0x.value = visX(pts[0].x); form.pt0y.value = visY(pts[0].y);
-        form.pt1x.value = visY(pts[1].y); form.pt1y.value = visY(pts[1].y);
-        form.pt2x.value = visY(pts[2].y); form.pt2y.value = visY(pts[2].y);
-        form.pt3x.value = visY(pts[3].y); form.pt3y.value = visY(pts[3].y);
+      function keyDownPt(event, value, idx, xory) {
+        //console.log("keycode: " + event.keyCode);
+        if (event.keyCode == 13 || event.keyCode == 9) { // ENTER key or TAB key
+          var form = document.theForm;
+          if (xory == 'x') {
+            pts[idx].x = convX(value);
+          } else {
+            pts[idx].y = convY(value);
+          }
+          drawCanvas();
+          updateObjc();
+        }
       }
+
+      function updateObjc() {
+        var objc = document.getElementById("objc");
+        if ((visX(pts[0].x)!=0 || visY(pts[0].y)!=0 || visX(pts[3].x)!=1 || visY(pts[3].y) !=1 )) {
+          objc.innerText = "Error : start and/or end point are not (0,0) (1,1) respectively"
+        } else {
+          objc.innerText = "[CAMediaTimingFunction functionWithControlPoints:" + 
+            visX(pts[1].x) + " :" + visY(pts[1].y) + " :" + visX(pts[2].x) + " :" + visY(pts[2].y) + "];";
+        }
+      }
+      
+      function toogleMode() {
+        timingFunction = !timingFunction;
+
+        if (timingFunction) {
+          pts[0] = {'x':convX(0), 'y':convY(0) };
+          pts[3] = {'x':convX(1), 'y':convY(1) };
+          
+        }
+
+        var form = document.theForm
+        form.pt0x.disabled = timingFunction;
+        form.pt0y.disabled = timingFunction;
+        form.pt3x.disabled = timingFunction;
+        form.pt3y.disabled = timingFunction;
+
+        var objc = document.getElementById("objc");
+        objc.hidden = !timingFunction;
+        /*form.pt0x.hidden = timingFunction;
+        form.pt0y.hidden = timingFunction;
+        form.pt3x.hidden = timingFunction;
+        form.pt3y.hidden = timingFunction;
+        */
+        
+        drawCanvas();
+        updateFields();
+        updateObjc();
+        
+      }
+
       window.onload = function() {
         var canvas = document.getElementById("theCanvas");
         canvas.setAttribute("width", gridSize.w);
         canvas.setAttribute("height", gridSize.h);
 
-        // Draw the canvas with the initial points
+        // Draw the canvas and update the fields with default values
         drawCanvas();
         updateFields();
+        updateObjc();
       };
     </script>
   </head>
-  <body onmousedown="return false;">
+  <body>
     <canvas id="theCanvas" onMousedown="dragOn(event)" onmousemove="dragPt(event)" onmouseup="dragOff(event)">
     </canvas>
-    <form name="theForm" method="post">
-    Start Point     ( <input type="text" name="pt0x" size="4" />, <input type="text" name="pt0y" size="4" /> ); </br>
-    Control Point 1 ( <input type="text" name="pt1x" size="4" />, <input type="text" name="pt1y" size="4" /> ); </br>
-    Control Point 2 ( <input type="text" name="pt2x" size="4" />, <input type="text" name="pt2y" size="4" /> ); </br>
-    End Point       ( <input type="text" name="pt3x" size="4" />, <input type="text" name="pt3y" size="4" /> ); </br>
-    </form> 
+    <form name="theForm" method="get"> <!-- "post" is OK, but "get" does not show alerts when reloading the form -->
+    <input type="checkbox" name="checkbox" onclick="toogleMode()" checked>Bezier path for CAMediaTimingFunction<br>
+    <div class="formLine">
+    <div id="objc"></div></br>
+    </div>
+    <div class="formLine">
+    Points Info:</br>
+    </div>
+    <div class="formLine">
+    Start Point     ( 
+    <input type="text" name="pt0x" size="4" onkeydown="keyDownPt(event, document.theForm.pt0x.value, 0, 'x')"/>,
+    <input type="text" name="pt0y" size="4" onkeydown="keyDownPt(event, document.theForm.pt0y.value, 0, 'y')"/> ); </br>
+    </div>
+    <div class="formLine">
+    Control Point 1 ( 
+    <input type="text" name="pt1x" size="4" onkeydown="keyDownPt(event, document.theForm.pt1x.value, 1, 'x')"/>,
+    <input type="text" name="pt1y" size="4" onkeydown="keyDownPt(event, document.theForm.pt1y.value, 1, 'y')"/> ); </br>
+    </div>
+    <div class="formLine">
+    Control Point 2 ( 
+    <input type="text" name="pt2x" size="4" onkeydown="keyDownPt(event, document.theForm.pt2x.value, 2, 'x')"/>,
+    <input type="text" name="pt2y" size="4" onkeydown="keyDownPt(event, document.theForm.pt2y.value, 2, 'y')"/> ); </br>
+    </div>
+    <div class="formLine">
+    End Point       ( 
+    <input type="text" name="pt3x" size="4" onkeydown="keyDownPt(event, document.theForm.pt3x.value, 3, 'x')"/>,
+    <input type="text" name="pt3y" size="4" onkeydown="keyDownPt(event, document.theForm.pt3y.value, 3, 'y')"/> ); </br>
+    </div>
+    </form>
+    </br>
   </body>
 </html>
