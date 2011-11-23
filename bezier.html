@@ -3,7 +3,17 @@
   <head>
     <style>
       body { margin: 0px; padding: 30px; font-family:"Lucida Console", sans-serif; }
-      form [disabled] { border:none; }
+      input [disabled] { border:none; color:green; }
+      #checkbox{
+        -webkit-animation: myAnimation 1s ease-in-out 0s infinite alternate;
+        webkit-transform
+      }
+      #checkbox-animation {
+        -webkit-transform: rotate(360deg) scale(2);
+        -moz-transform: rotate(360deg) scale(2);
+        -o-transform: rotate(360deg) scale(2);
+        -ms-transform: rotate(360deg) scale(2);
+      }
       /*#myCanvas { border: 1px solid #9C9898; }*/
     </style>
     <script>
@@ -105,12 +115,12 @@
         var gH = gridSize.h + 2*(-gY);
         drawGrid(context, squareSide*unit, {'x':gX, 'y':gY, 'w':gW, 'h':gH}, false);
         context.closePath();
-      
+
         context.restore();
-      
+
         // Draw control points
         drawControlPoints(context);
-      
+
         // Draw bezier
         context.beginPath();
         context.moveTo(pts[0].x, pts[0].y);
@@ -123,11 +133,17 @@
       
       // Update coordinates from view
       function updateFields() {
-        var form = document.theForm;
-        form.pt0x.value = visX(pts[0].x); form.pt0y.value = visY(pts[0].y);
-        form.pt1x.value = visX(pts[1].x); form.pt1y.value = visY(pts[1].y);
-        form.pt2x.value = visX(pts[2].x); form.pt2y.value = visY(pts[2].y);
-        form.pt3x.value = visX(pts[3].x); form.pt3y.value = visY(pts[3].y);
+
+        document.getElementById("pt0x").value = visX(pts[0].x); document.getElementById("pt0y").value = visY(pts[0].y);
+        document.getElementById("pt1x").value = visX(pts[1].x); document.getElementById("pt1y").value = visY(pts[1].y);
+        document.getElementById("pt2x").value = visX(pts[2].x); document.getElementById("pt2y").value = visY(pts[2].y);
+        document.getElementById("pt3x").value = visX(pts[3].x); document.getElementById("pt3y").value = visY(pts[3].y);
+
+        document.getElementById("pt0x").disabled = timingFunction;
+        document.getElementById("pt0y").disabled = timingFunction;
+        document.getElementById("pt3x").disabled = timingFunction;
+        document.getElementById("pt3y").disabled = timingFunction;
+        
       }
 
       // Event handlers:
@@ -174,9 +190,8 @@
       }
       
       function keyDownPt(event, value, idx, xory) {
-        //console.log("keycode: " + event.keyCode);
-        if (event.keyCode == 13 || event.keyCode == 9) { // ENTER key or TAB key
-          var form = document.theForm;
+        //console.log(event.keycode);
+          if (event.keyValue)
           if (xory == 'x') {
             pts[idx].x = convX(value);
           } else {
@@ -184,46 +199,32 @@
           }
           drawCanvas();
           updateObjc();
-        }
       }
 
+      // Update obj-c from fields
       function updateObjc() {
         var objc = document.getElementById("objc");
-        if ((visX(pts[0].x)!=0 || visY(pts[0].y)!=0 || visX(pts[3].x)!=1 || visY(pts[3].y) !=1 )) {
-          objc.innerText = "Error : start and/or end point are not (0,0) (1,1) respectively"
-        } else {
+        objc.hidden = !timingFunction;
+        if ((visX(pts[0].x)==0 && visY(pts[0].y)==0 && visX(pts[3].x)==1 && visY(pts[3].y)==1 )) {
           objc.innerText = "[CAMediaTimingFunction functionWithControlPoints:" + 
             visX(pts[1].x) + " :" + visY(pts[1].y) + " :" + visX(pts[2].x) + " :" + visY(pts[2].y) + "];";
+        } else {
+          objc.innerText = "Error : start and/or end point are not (0,0) (1,1) respectively"
         }
       }
       
+      // Toogle mode Bezier for CAMediaTimingFunction <-> General Bezier
       function toogleMode() {
         timingFunction = !timingFunction;
 
         if (timingFunction) {
           pts[0] = {'x':convX(0), 'y':convY(0) };
           pts[3] = {'x':convX(1), 'y':convY(1) };
-          
         }
-
-        var form = document.theForm
-        form.pt0x.disabled = timingFunction;
-        form.pt0y.disabled = timingFunction;
-        form.pt3x.disabled = timingFunction;
-        form.pt3y.disabled = timingFunction;
-
-        var objc = document.getElementById("objc");
-        objc.hidden = !timingFunction;
-        /*form.pt0x.hidden = timingFunction;
-        form.pt0y.hidden = timingFunction;
-        form.pt3x.hidden = timingFunction;
-        form.pt3y.hidden = timingFunction;
-        */
-        
+        // Draw the canvas, update the fields and Obj-c
         drawCanvas();
         updateFields();
         updateObjc();
-        
       }
 
       window.onload = function() {
@@ -231,45 +232,48 @@
         canvas.setAttribute("width", gridSize.w);
         canvas.setAttribute("height", gridSize.h);
 
-        // Draw the canvas and update the fields with default values
+        // Draw the canvas, update the fields and Obj-c
         drawCanvas();
         updateFields();
         updateObjc();
       };
+
     </script>
   </head>
   <body>
     <canvas id="theCanvas" onMousedown="dragOn(event)" onmousemove="dragPt(event)" onmouseup="dragOff(event)">
     </canvas>
-    <form name="theForm" method="get"> <!-- "post" is OK, but "get" does not show alerts when reloading the form -->
-    <input type="checkbox" name="checkbox" onclick="toogleMode()" checked>Bezier path for CAMediaTimingFunction<br>
+
+    </br>
+    <!--<form name="theForm" method="get"> <! - - "post" is OK, but "get" does not show alerts when reloading the form -->
+    <input type="checkbox" name="checkbox" id="checkbox" onclick="toogleMode()" checked>Bezier path for CAMediaTimingFunction<br>
     <div class="formLine">
-    <div id="objc"></div></br>
+    <div id="objc"></br>
     </div>
     <div class="formLine">
     Points Info:</br>
     </div>
     <div class="formLine">
     Start Point     ( 
-    <input type="text" name="pt0x" size="4" onkeydown="keyDownPt(event, document.theForm.pt0x.value, 0, 'x')"/>,
-    <input type="text" name="pt0y" size="4" onkeydown="keyDownPt(event, document.theForm.pt0y.value, 0, 'y')"/> ); </br>
+    <input type="text" name="pt0x" id="pt0x" size="4" onkeyup="keyDownPt(event, document.getElementById('pt0x').value, 0, 'x')"/>,
+    <input type="text" name="pt0y" id="pt0y" size="4" onkeyup="keyDownPt(event, document.getElementById('pt0y').value, 0, 'y')"/> ); </br>
     </div>
     <div class="formLine">
     Control Point 1 ( 
-    <input type="text" name="pt1x" size="4" onkeydown="keyDownPt(event, document.theForm.pt1x.value, 1, 'x')"/>,
-    <input type="text" name="pt1y" size="4" onkeydown="keyDownPt(event, document.theForm.pt1y.value, 1, 'y')"/> ); </br>
+    <input type="text" name="pt1x" id="pt1x" size="4" onkeyup="keyDownPt(event, document.getElementById('pt1x').value, 1, 'x')"/>,
+    <input type="text" name="pt1y" id="pt1y" size="4" onkeyup="keyDownPt(event, document.getElementById('pt1y').value, 1, 'y')"/> ); </br>
     </div>
     <div class="formLine">
     Control Point 2 ( 
-    <input type="text" name="pt2x" size="4" onkeydown="keyDownPt(event, document.theForm.pt2x.value, 2, 'x')"/>,
-    <input type="text" name="pt2y" size="4" onkeydown="keyDownPt(event, document.theForm.pt2y.value, 2, 'y')"/> ); </br>
+    <input type="text" name="pt2x" id="pt2x" size="4" onkeyup="keyDownPt(event, document.getElementById('pt2x').value, 2, 'x')"/>,
+    <input type="text" name="pt2y" id="pt2y" size="4" onkeyup="keyDownPt(event, document.getElementById('pt2y').value, 2, 'y')"/> ); </br>
     </div>
     <div class="formLine">
     End Point       ( 
-    <input type="text" name="pt3x" size="4" onkeydown="keyDownPt(event, document.theForm.pt3x.value, 3, 'x')"/>,
-    <input type="text" name="pt3y" size="4" onkeydown="keyDownPt(event, document.theForm.pt3y.value, 3, 'y')"/> ); </br>
+    <input type="text" name="pt3x" id="pt3x" size="4" onkeyup="keyDownPt(event, document.getElementById('pt3x').value, 3, 'x')"/>,
+    <input type="text" name="pt3y" id="pt3y" size="4" onkeyup="keyDownPt(event, document.getElementById('pt3y').value, 3, 'y')"/> ); </br>
     </div>
-    </form>
+    <!-- /form> -->
     </br>
   </body>
 </html>
