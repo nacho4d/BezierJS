@@ -243,7 +243,7 @@
         updateObjc();
       }
 
-      window.onload = function() {
+      function loadInteractiveBezier() {
         var canvas = document.getElementById("theCanvas");
         canvas.setAttribute("width", gridSize.w);
         canvas.setAttribute("height", gridSize.h);
@@ -256,6 +256,10 @@
         var container = document.getElementById("container");
         container.style.width = gridSize.w + "px";
       };
+
+      window.onload = function() {
+        loadInteractiveBezier();
+      }
 
     </script>
   </head>
