@@ -2,7 +2,7 @@
 <html>
   <head>
     <style>
-      body { margin: 0px; padding: 30px; font-family:"Lucida Console", sans-serif; }
+      body { margin: 0px; padding: 30px; font-family:"Menlo", "Lucida Console", sans-serif; }
       input [disabled] { border:none; color:green; }
       #checkbox{
         -webkit-animation: myAnimation 1s ease-in-out 0s infinite alternate;
@@ -14,7 +14,16 @@
         -o-transform: rotate(360deg) scale(2);
         -ms-transform: rotate(360deg) scale(2);
       }
-      /*#myCanvas { border: 1px solid #9C9898; }*/
+
+      #container { border-style:solid; border-width:1px; border-color:#EEEEEE;}
+      #sub-container { padding:10px; }
+      #points-container { padding:10px; }
+      #function-container { padding:10px; }
+      #objc { padding:10px; font-size:80%; padding-left:25px;}
+      #objc .sc-class-name { color: rgb(92,38,153); }
+      #objc .sc-method { color: rgb(46,13,101) }
+      #objc .sc-number { color: rgb(28,0,207); }
+
     </style>
     <script>
 
@@ -184,7 +193,7 @@
         'y':event.offsetY?(event.offsetY):event.pageY - canvas.offsetTop};;
         drawCanvas();
         updateFields();
-        if (timingFunction && ptIdx != 0 && ptIds != 3) {
+        if (timingFunction && ptIdx != 0 && ptIdx != 3) {
           updateObjc();
         }
       }
@@ -203,11 +212,18 @@
 
       // Update obj-c from fields
       function updateObjc() {
+
+        // Float with 2 decimals
+        function format(original) {
+          return Math.round(original*100)/100;
+        }
+
         var objc = document.getElementById("objc");
         objc.hidden = !timingFunction;
         if ((visX(pts[0].x)==0 && visY(pts[0].y)==0 && visX(pts[3].x)==1 && visY(pts[3].y)==1 )) {
-          objc.innerText = "[CAMediaTimingFunction functionWithControlPoints:" + 
-            visX(pts[1].x) + " :" + visY(pts[1].y) + " :" + visX(pts[2].x) + " :" + visY(pts[2].y) + "];";
+          objc.innerHTML = "<div class='sc-method'>[<span class='sc-class-name'>" + "CAMediaTimingFunction" + "</span>" + "</br>functionWithControlPoints:" + 
+            "<span class='sc-number'>" + format(visX(pts[1].x)) + "</span>" + " :" + "<span class='sc-number'>" + format(visY(pts[1].y)) + "</span>" + "\n" +
+            ":" + "<span class='sc-number'>" + format(visX(pts[2].x)) + "</span>" + " :" + "<span class='sc-number'>" + format(visY(pts[2].y)) + "</span>" + "];" + "</div>";
         } else {
           objc.innerText = "Error : start and/or end point are not (0,0) (1,1) respectively"
         }
@@ -236,6 +252,9 @@
         drawCanvas();
         updateFields();
         updateObjc();
+
+        var container = document.getElementById("container");
+        container.style.width = gridSize.w + "px";
       };
 
     </script>
@@ -245,35 +264,41 @@
     </canvas>
 
     </br>
-    <!--<form name="theForm" method="get"> <! - - "post" is OK, but "get" does not show alerts when reloading the form -->
-    <input type="checkbox" name="checkbox" id="checkbox" onclick="toogleMode()" checked>Bezier path for CAMediaTimingFunction<br>
-    <div class="formLine">
-    <div id="objc"></br>
-    </div>
-    <div class="formLine">
-    Points Info:</br>
-    </div>
-    <div class="formLine">
-    Start Point     ( 
-    <input type="text" name="pt0x" id="pt0x" size="4" onkeyup="keyDownPt(event, document.getElementById('pt0x').value, 0, 'x')"/>,
-    <input type="text" name="pt0y" id="pt0y" size="4" onkeyup="keyDownPt(event, document.getElementById('pt0y').value, 0, 'y')"/> ); </br>
-    </div>
-    <div class="formLine">
-    Control Point 1 ( 
-    <input type="text" name="pt1x" id="pt1x" size="4" onkeyup="keyDownPt(event, document.getElementById('pt1x').value, 1, 'x')"/>,
-    <input type="text" name="pt1y" id="pt1y" size="4" onkeyup="keyDownPt(event, document.getElementById('pt1y').value, 1, 'y')"/> ); </br>
-    </div>
-    <div class="formLine">
-    Control Point 2 ( 
-    <input type="text" name="pt2x" id="pt2x" size="4" onkeyup="keyDownPt(event, document.getElementById('pt2x').value, 2, 'x')"/>,
-    <input type="text" name="pt2y" id="pt2y" size="4" onkeyup="keyDownPt(event, document.getElementById('pt2y').value, 2, 'y')"/> ); </br>
-    </div>
-    <div class="formLine">
-    End Point       ( 
-    <input type="text" name="pt3x" id="pt3x" size="4" onkeyup="keyDownPt(event, document.getElementById('pt3x').value, 3, 'x')"/>,
-    <input type="text" name="pt3y" id="pt3y" size="4" onkeyup="keyDownPt(event, document.getElementById('pt3y').value, 3, 'y')"/> ); </br>
-    </div>
-    <!-- /form> -->
-    </br>
+
+	<div id="container"> <div class="sub-container">
+
+      <div id="points-container">
+        <div style="font-weight: bold;">
+        Points Info:</br></br>
+        </div>
+
+        <span>Start Point&nbsp&nbsp&nbsp&nbsp&nbsp(
+        <input type="text" name="pt0x" id="pt0x" size="4" onkeyup="keyDownPt(event, document.getElementById('pt0x').value, 0, 'x')"/>,
+        <input type="text" name="pt0y" id="pt0y" size="4" onkeyup="keyDownPt(event, document.getElementById('pt0y').value, 0, 'y')"/> ); </br>
+        </span>
+        <span>Control Point 1 (
+        <input type="text" name="pt1x" id="pt1x" size="4" onkeyup="keyDownPt(event, document.getElementById('pt1x').value, 1, 'x')"/>,
+        <input type="text" name="pt1y" id="pt1y" size="4" onkeyup="keyDownPt(event, document.getElementById('pt1y').value, 1, 'y')"/> ); </br>
+        </span>
+        <span>Control Point 2 (
+        <input type="text" name="pt2x" id="pt2x" size="4" onkeyup="keyDownPt(event, document.getElementById('pt2x').value, 2, 'x')"/>,
+        <input type="text" name="pt2y" id="pt2y" size="4" onkeyup="keyDownPt(event, document.getElementById('pt2y').value, 2, 'y')"/> ); </br>
+        </span>
+        <span>End Point&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp(
+        <input type="text" name="pt3x" id="pt3x" size="4" onkeyup="keyDownPt(event, document.getElementById('pt3x').value, 3, 'x')"/>,
+        <input type="text" name="pt3y" id="pt3y" size="4" onkeyup="keyDownPt(event, document.getElementById('pt3y').value, 3, 'y')"/> ); </br>
+        </span>
+
+      </div> <!-- end of points-container -->
+
+      </br>
+      <div id="function-container">
+        <input type="checkbox" name="checkbox" id="checkbox" onclick="toogleMode()" checked>&nbspConstrain path for CAMediaTimingFunction<br>
+        </br>
+        <div id="objc"></div>
+        </br>
+      </div> <!-- end of function-container -->
+
+    </div></div> <!-- end of container -->
   </body>
 </html>
