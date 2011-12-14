@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body>
+
+<script type="text/javascript">
+
+var loadInteractiveBezier = function (containerId, hiddingElemId) {
+
+    var script = document.createElement('script');
+    script.type = "text/javascript";
+    script.src = "https://raw.github.com/nacho4d/BezierJS/master/ib.js";
+    document.body.appendChild(script);
+
+    var fileref = document.createElement("link");
+    fileref.setAttribute("rel", "stylesheet");
+    fileref.setAttribute("type", "text/css");
+    fileref.setAttribute("href", "https://raw.github.com/nacho4d/BezierJS/master/ib.css");
+    document.head.appendChild(fileref);
+
+    this.poll = function (containerId) {
+        var div = document.getElementById(containerId);
+        var text = div.innerText;
+        div.innerText = (text.length == 0)? "Loading . " : text + ".";
+        document.getElementById(hiddingElemId).style.visibility = 'hidden'; 
+
+        console.log("polling...");
+        if (typeof IB == "undefined") {
+            setTimeout(function () {this.poll(containerId)}, 500);
+        } else {
+            console.log("loaded!!");
+            IB.load(containerId);
+        };
+    }
+    poll(containerId);
+}
+</script>
+<input id="ib-button" type="button" value="Click me" onclick="loadInteractiveBezier('ib-container', this.id)"/>
+<div id="ib-container">
+</div>
+</body>
+</html>
