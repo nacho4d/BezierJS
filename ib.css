@@ -1,3 +1,4 @@
+/* css Interactive Bezier default style 1.0 */
 #ib-container { margin: 0px; padding: 30px; font-family:"Menlo", "Lucida Console", sans-serif; }
 #ib-outer-points-container { border-style:solid; border-width:1px; border-color:#EEEEEE;}
 #ib-outer-points-container-sub { padding:10px; }

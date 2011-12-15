@@ -13,11 +13,11 @@ var loadInteractiveBezier = function (containerId, hiddingElemId) {
     script.src = "https://raw.github.com/nacho4d/BezierJS/master/ib.js";
     document.body.appendChild(script);
 
-    var fileref = document.createElement("link");
-    fileref.setAttribute("rel", "stylesheet");
-    fileref.setAttribute("type", "text/css");
-    fileref.setAttribute("href", "https://raw.github.com/nacho4d/BezierJS/master/ib.css");
-    document.head.appendChild(fileref);
+    var sheet = document.createElement("link");
+    sheet.rel = "stylesheet";
+    sheet.type = "text/css";
+    sheet.href = "https://raw.github.com/nacho4d/BezierJS/master/ib.css";
+    document.head.appendChild(sheet);
 
     this.poll = function (containerId) {
         var div = document.getElementById(containerId);
